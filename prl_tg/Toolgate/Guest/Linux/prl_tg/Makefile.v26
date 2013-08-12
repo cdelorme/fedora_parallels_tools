@@ -1,0 +1,32 @@
+################################################################################
+#
+# Parallels Toolgate Linux driver
+# Copyright (c) 2008 Parallels Inc. All Rights Reserved.
+#
+################################################################################
+CFILES = prltg.c
+HFILES = prltg_compat.h ../Interfaces/prltg.h ../Interfaces/prltg_call.h \
+	 ../../../Interfaces/Tg.h
+
+obj-m += prl_tg.o
+prl_tg-objs := prltg.o
+
+KVER ?= $(shell uname -r)
+SRC ?= /lib/modules/$(KVER)/build
+
+_HEADERS_CHECK_DIR := /lib/modules/$(KVER)/source
+ifeq ($(shell if [ -e $(_HEADERS_CHECK_DIR) ]; then echo y; fi),y)
+ HEADERS_CHECK_DIR ?= $(_HEADERS_CHECK_DIR)
+else
+ HEADERS_CHECK_DIR ?= $(SRC)
+endif
+
+EXTRA_CFLAGS	+= $(shell \
+	grep -q "\<wait_for_completion_interruptible\>" \
+		$(HEADERS_CHECK_DIR)/include/linux/completion.h || \
+	echo -DPRL_INTERRUPTIBLE_COMPLETION)
+prl_tg:	$(CFILES) $(HFILES)
+	$(MAKE) -C $(SRC) SUBDIRS=$(shell pwd) SRCROOT=$(shell pwd) modules
+
+clean:
+	rm -rf *.o *.ko *.mod* *symvers .tmp_versions .*.cmd prl_tg.ver 

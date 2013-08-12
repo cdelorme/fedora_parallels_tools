@@ -1,0 +1,36 @@
+PRL_ETH ?= prl_eth/pvmnet
+PRL_TG ?= prl_tg/Toolgate/Guest/Linux/prl_tg
+PRL_FS ?= prl_fs/SharedFolders/Guest/Linux/prl_fs
+PRL_FREEZE ?= prl_fs_freeze/Snapshot/Guest/Linux/prl_freeze
+
+KVER ?= $(shell uname -r)
+KERNEL_DIR ?= /lib/modules/$(KVER)/build
+# Get version from version.h in kernel source directory
+ifeq "$(wildcard $(KERNEL_DIR)/include/linux/version.h)" ""
+	VERSION_H_PATH ?= $(KERNEL_DIR)/include/generated/uapi/linux/version.h
+else
+	VERSION_H_PATH ?= $(KERNEL_DIR)/include/linux/version.h
+endif
+
+VERSION_CODE := $(shell awk '/\#define[ \t]+LINUX_VERSION_CODE[ \t]\
+	*/ { print $$3 }' $(VERSION_H_PATH) | tail -n 1)
+
+all: installme cleanme
+
+.PHONY: all
+
+installme:
+	cd ${PRL_ETH} && make
+	cd ${PRL_TG} && make
+	cp -f ${PRL_TG}/*.symvers ${PRL_FS} ||:
+	cd ${PRL_FS} && make
+ifeq ($(shell if [ $(VERSION_CODE) -ge 132608 ]; then echo y; fi),y)
+	cd ${PRL_FREEZE} && make
+endif
+
+cleanme:
+	cd ${PRL_ETH} && rm -rf .*.cmd .tmp_versions
+	cd ${PRL_TG} && rm -rf .*.cmd .tmp_versions
+	cd ${PRL_FS} && rm -rf .*.cmd .tmp_versions
+	cd ${PRL_FREEZE} && rm -rf .*.cmd .tmp_versions
+
