@@ -77,3 +77,18 @@ We can do this by running (from inside the containing folder):
 
 Simply cp it over the original and run the `./install` from inside the original and you are all set.
 
+
+### Known Bugs
+
+There are some issues still with parallels tools after the patches are applied.
+
+- Graphics are not fully enhanced
+- Drag and drop between systems doesn't always work.
+- The latest 3.11 kernel broke file sharing.
+- The init.d script is outdated since Fedora uses systemd
+
+It appears that the correct driver and vga device have loaded, but the vga's BDF pci path does not exist in the /sys directory, and further the screen does not automatically resize.
+
+You can read more about the file system bug and systemd patches in the [issue](https://github.com/CDeLorme/fedora_parallels_tools/issues/1) posted by [denji](https://github.com/denji).
+
+**This project is discontinued, the latest release of Parallels 9 addresses all these problems and works great.**
